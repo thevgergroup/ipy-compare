@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ipy-compare"
-version = "0.1.0"
+version = "0.0.0"
 description = ""
 authors = ["patrick o'leary <pjaol@pjaol.com>"]
 readme = "README.md"
