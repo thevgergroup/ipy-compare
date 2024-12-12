@@ -1,6 +1,7 @@
 # ipy-compare
 
-`ipy-compare` is an interactive tool designed for use in Jupyter notebooks, enabling users to visually compare rows and columns of a DataFrame. It supports customizable measures, pagination, and repeatable sampling, with modular branding options for seamless integration.
+`ipy-compare` is an interactive tool designed for use in Jupyter notebooks, enabling users to visually compare rows and columns of a DataFrame. 
+Ideally used for tagging or for labeling data in a pandas DataFrame.
 
 ## Features
 - **Row and Column Comparison**: Supports both overall row-level measures and column-specific measures.
@@ -8,6 +9,20 @@
 - **Repeatable Sampling**: Use a fixed random seed for consistent sampling.
 - **Branding**: Add customizable branding to the footer, including a linkable logo and text.
 - **Interactive Radio Buttons**: Visual indicators for selected measures.
+
+### Example:
+We support two different ways to use ipy-compare.
+
+1. **Each Column**: Use a measure for each column.
+2. **Overall Row**: Use a measure for the entire row.
+
+Where you can specify the questions you want to ask for each column or for the entire row.
+
+#### Each Column
+<img src="https://github.com/thevgergroup/ipy-compare/blob/main/docs/assets/each-ipy-compare.png?raw=true" alt="Each Column" width="700" height="200">
+
+#### Overall Row
+<img src="https://github.com/thevgergroup/ipy-compare/blob/main/docs/assets/overall-ipy-compare.png?raw=true" alt="Overall Row" width="700" height="200">
 
 ---
 
