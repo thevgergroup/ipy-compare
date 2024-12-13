@@ -60,155 +60,153 @@ class Compare:
 
     def _generate_row_html(self, row):
         """
-        Generates the layout for a single row, with values and measures directly under each column.
+        Generates the layout for a single row, ensuring all columns are properly aligned.
+        Adds borders between columns for better visual separation.
+        Handles auto-sizing for cells and supports scrollbars for overflow content.
         """
-        # Create a container for the row
-        container = widgets.VBox()
+        from ipywidgets import GridspecLayout
 
-        # Create a row for column headers
-        header_row = widgets.HBox([widgets.Label(value=f"{col}", layout=widgets.Layout(width="120px")) for col in self.columns])
+        # Create a grid layout for better alignment
+        grid = GridspecLayout(3, len(self.columns), width="100%")
 
-        # Create a row for values
-        value_row = widgets.HBox([widgets.Label(value=f"{row[col]}", layout=widgets.Layout(width="120px")) for col in self.columns])
+        # Add column headers with borders
+        for i, col in enumerate(self.columns):
+            grid[0, i] = widgets.HTML(
+                value=f"<div style='text-align: center; font-weight: bold; padding: 5px; border-right: {'' if i == len(self.columns) - 1 else '1px solid #ccc'};'>{col}</div>",
+                layout=widgets.Layout(width="auto", max_width="300px")
+            )
 
-        # Create a row for radio buttons (if "each" is provided in measures)
+        # Add row values with borders
+        for i, col in enumerate(self.columns):
+            grid[1, i] = widgets.HTML(
+                value=f"<div style='white-space: pre-wrap; word-wrap: break-word; overflow: auto; max-width: 300px; max-height: 100px; padding: 5px; border-right: {'' if i == len(self.columns) - 1 else '1px solid #ccc'};'>{row[col]}</div>",
+                layout=widgets.Layout(width="auto", max_width="300px", overflow="auto", height="auto")
+            )
+
+        # Add measure widgets directly (if "each" is provided in measures)
         if "each" in self.measures:
-            measure_row = widgets.HBox()
-            for col in self.columns:
-                options = [None] + self.measures["each"]
-                if col not in self.radio_widgets:
-                    self.radio_widgets[col] = widgets.RadioButtons(
-                        options=options,
-                        value=None,
-                        layout=widgets.Layout(width="120px")
-                    )
-                saved = self._get_saved_measure(col)
-                self.radio_widgets[col].value = saved
-                measure_row.children += (self.radio_widgets[col],)
-        else:
-            measure_row = widgets.HBox([])
+            for i, col in enumerate(self.columns):
+                grid[2, i] = self._get_or_create_radio_buttons(col)
 
-        # Add all rows to the container
-        container.children = [header_row, value_row, measure_row]
-        return container
+        return widgets.VBox(
+            [grid],
+            layout=widgets.Layout(
+                border="2px solid #ccc",
+                border_radius="8px",
+                padding="10px",
+                margin="10px",
+            ),
+        )
+
+    def _get_or_create_radio_buttons(self, col):
+        options = [None] + self.measures.get("each", [])
+        if col not in self.radio_widgets:
+            self.radio_widgets[col] = widgets.RadioButtons(
+                options=options,
+                value=None,
+                layout=widgets.Layout(width="auto", max_width="300px")
+            )
+        saved = self._get_saved_measure(col)  # Preload saved selection if it exists
+        self.radio_widgets[col].value = saved
+        return self.radio_widgets[col]
 
     def _add_overall_measure_radio_buttons(self):
-        """
-        Displays the radio buttons for overall measures.
-        """
         display(HTML("<h4>Overall Measures:</h4>"))
         options = [None] + self.measures["overall"]
         if "overall" not in self.radio_widgets:
             self.radio_widgets["overall"] = widgets.RadioButtons(
                 options=options,
-                value=None,  # No default selection
+                value=None,
                 description="Select:",
-                layout=widgets.Layout(width='auto')  # Adjust layout as needed
+                layout=widgets.Layout(width='auto')
             )
-        # Preload saved selection if it exists
         saved = self._get_saved_measure("overall")
         self.radio_widgets["overall"].value = saved
         display(self.radio_widgets["overall"])
 
     def _get_saved_measure(self, column):
-        """
-        Retrieve the saved measure for the current row and column (or overall).
-        """
         for measurement in self.measurements:
             if measurement["row_index"] == self.current_index and measurement.get("column") == column:
                 return measurement["measure"]
         return None
 
     def _add_footer(self):
-        """Display footer with branding."""
-        display(HTML(footer_html))  # Use the imported footer_html variable
+        display(HTML(footer_html))
 
     def _next_row(self, _):
+        """
+        Move to the next row in the pagination iterator.
+        """
         try:
+            # Advance to the next index in pagination
             self.current_index = next(self.pagination_iter)
-            self.render()
         except StopIteration:
+            # If no more rows, set to None to indicate completion
             self.current_index = None
-            self.render()
+        self.render()  # Render the new state
 
     def _previous_row(self, _):
-        # Reset pagination iterator to current row
+        """
+        Move to the previous row and reset the pagination iterator to reflect the state.
+        """
         idx = self.pagination.index(self.current_index)
         if idx > 0:
             self.current_index = self.pagination[idx - 1]
-            self.pagination_iter = iter(self.pagination[idx:])
-            self.render()
+            self.pagination_iter = iter(self.pagination[idx:])  # Reinitialize iterator
+        self.render()
 
     def _add_navigation_buttons(self):
         prev_button = widgets.Button(description="Previous")
         submit_button = widgets.Button(description="Submit")
         submit_next_button = widgets.Button(description="Submit & Next")
-
         prev_button.on_click(self._previous_row)
         submit_button.on_click(self._submit_measures)
         submit_next_button.on_click(self._submit_and_next)
-
         display(widgets.HBox([prev_button, submit_button, submit_next_button]))
 
     def _submit_measures(self, _):
+        """
+        Save or update the current row's measurements without advancing to the next row.
+        """
         self._save_or_update_measures()
+        self.render()  # Redraw the current row
 
     def _submit_and_next(self, _):
+        """
+        Save or update the current row's measurements and advance to the next row.
+        """
         self._save_or_update_measures()
         self._next_row(None)
 
     def _save_or_update_measures(self):
         row_index = self.current_index
-        # Update overall measure
         if "overall" in self.radio_widgets:
             selected_overall = self.radio_widgets["overall"].value
-            if selected_overall is not None:  # Ensure a selection was made
+            if selected_overall is not None:
                 self._update_or_add_measure(row_index, None, None, selected_overall, "overall")
-        # Update each column measure
         for col in self.columns:
             if col in self.radio_widgets:
                 selected_measure = self.radio_widgets[col].value
-                if selected_measure is not None:  # Ensure a selection was made
+                if selected_measure is not None:
                     value = self.df.iloc[row_index][col]
                     self._update_or_add_measure(row_index, col, value, selected_measure, "column")
 
     def _update_or_add_measure(self, row_index, column, value, measure, measure_type):
-        """Update an existing measure or add a new one."""
         for existing in self.measurements:
-            if (
-                existing["row_index"] == row_index
-                and existing.get("column") == column
-                and existing["type"] == measure_type
-            ):
-                # Update the existing measure
+            if existing["row_index"] == row_index and existing.get("column") == column and existing["type"] == measure_type:
                 existing["measure"] = measure
                 return
-        # Add a new measure if not found
         self.measurements.append({
             "row_index": row_index,
             "column": column,
             "value": value,
             "measure": measure,
-            "type": measure_type  # Distinguish between overall and column-specific
+            "type": measure_type
         })
 
     def get_measurements(self):
-        """
-        Returns the captured measurements as a DataFrame for easier analysis.
-        """
         return pd.DataFrame(self.measurements)
 
     @staticmethod
     def sample_indices(df, n, seed=None):
-        """
-        Sample row indices from a DataFrame with a fixed seed.
-
-        Args:
-            df (pd.DataFrame): The DataFrame to sample.
-            n (int): Number of rows to sample.
-            seed (int or None): Random seed for repeatability.
-
-        Returns:
-            list: List of sampled row indices.
-        """
         return df.sample(n=n, random_state=seed).index.tolist()

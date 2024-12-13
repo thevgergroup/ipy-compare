@@ -17,12 +17,15 @@ BASE64_ENCODED_LOGO = image_to_base64(image_path=image)
 # Base64-encoded logo and branding text
 footer_html = f"""
 <div style="display: flex; justify-content: flex-end; align-items: center; padding: 10px; border-top: 1px solid #ccc;">
+    <div>
     <a href="https://thevgergroup.com" target="_blank">
         <img src="data:image/png;base64,{BASE64_ENCODED_LOGO}" style="height: 40px; vertical-align: middle;">
     </a>
-    <br/>
-    <a href="https://thevgergroup.com" target="_blank" style="text-decoration: none; color: black; vertical-align: middle;">
-        Brought to you by The VGER Group
+    </div>
+    <div>
+    <a href="https://thevgergroup.com" target="_blank" style="text-decoration: none; color: black;">
+        The VGER Group
     </a>
+    </div>
 </div>
 """
