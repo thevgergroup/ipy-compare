@@ -1,6 +1,6 @@
 # ipy-compare
 
-`ipy-compare` is an interactive tool designed for use in Jupyter notebooks, enabling users to visually compare rows and columns of a DataFrame. 
+`ipy-compare` is an interactive tool designed for use in Jupyter notebooks and Google Colab, enabling users to visually compare rows and columns of a DataFrame. 
 Ideally used for tagging or for labeling data in a pandas DataFrame.
 
 ## Features
@@ -9,6 +9,7 @@ Ideally used for tagging or for labeling data in a pandas DataFrame.
 - **Repeatable Sampling**: Use a fixed random seed for consistent sampling.
 - **Branding**: Add customizable branding to the footer, including a linkable logo and text.
 - **Interactive Radio Buttons**: Visual indicators for selected measures.
+- **Colab Compatible**: Works seamlessly in Google Colab notebooks.
 
 ### Example:
 We support two different ways to use ipy-compare.
@@ -32,8 +33,6 @@ Where you can specify the questions you want to ask for each column or for the e
 pip install ipy-compare
 ```
 
-Clone or download the repository to include `ipy-compare` in your project.
-
 ---
 
 ## Usage
@@ -43,6 +42,7 @@ Clone or download the repository to include `ipy-compare` in your project.
 ```python
 from ipy_compare import Compare
 import pandas as pd
+import panel as pn  # Required for notebook/colab display
 
 # Sample DataFrame
 data = {
@@ -60,6 +60,9 @@ measures = {
 
 # Initialize Compare
 tool = Compare(df, columns=["Column1", "Column3"], measures=measures)
+
+# Display the tool
+tool.servable()
 ```
 
 ---
@@ -67,7 +70,8 @@ tool = Compare(df, columns=["Column1", "Column3"], measures=measures)
 ### Navigation and Interaction
 1. Navigate between rows using the `Previous` and `Submit & Next` buttons.
 2. Use the radio buttons to select measures for each column or for the overall row.
-3. Capture measurements interactively, which can be retrieved programmatically.
+3. Submit measurements using either the `Submit` button or `Submit & Next` to move to the next row.
+4. All measurements are captured and can be retrieved programmatically.
 
 ---
 
@@ -80,6 +84,7 @@ custom_order = [2, 0, 1]
 
 # Initialize Compare with custom pagination
 tool = Compare(df, columns=["Column1", "Column3"], measures=measures, pagination=custom_order)
+tool.servable()
 ```
 
 ---
@@ -93,6 +98,7 @@ sampled_indices = Compare.sample_indices(df, n=2, seed=42)
 
 # Initialize Compare with sampled indices
 tool = Compare(df, columns=["Column1", "Column3"], measures=measures, pagination=sampled_indices)
+tool.servable()
 ```
 
 ---
@@ -119,6 +125,14 @@ print(measurements)
 
 ---
 
+## Google Colab Usage
+When using in Google Colab, make sure to run these commands first:
+
+```python
+!pip install ipy-compare panel
+```
+
+The tool is fully compatible with Google Colab and will work the same way as in Jupyter notebooks.
 
 ---
 
