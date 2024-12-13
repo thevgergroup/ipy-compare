@@ -29,8 +29,17 @@ class Compare:
         self.pagination_iter = iter(self.pagination)  # Iterator for navigation
         self.current_index = self.pagination[0] if self.pagination else None
 
-        self._output = widgets.Output()
+        self._output = widgets.Output(
+            layout=widgets.Layout(
+                display='block',  # Explicitly set display to block
+                visibility='visible',  # Ensure visibility
+                height='auto',
+                width='100%'
+            )
+        )
+        display(HTML('<div style="display: block !important;">'))
         display(self._output)
+        display(HTML('</div>'))
         self.render()
 
     def render(self):
@@ -39,6 +48,15 @@ class Compare:
         """
         with self._output:
             clear_output(wait=True)
+            display(HTML('''
+                <style>
+                    .widget-output-area {
+                        display: block !important;
+                        visibility: visible !important;
+                    }
+                </style>
+            '''))
+            
             if self.current_index is None:
                 display(HTML("<h3>No more rows to compare.</h3>"))
                 return
