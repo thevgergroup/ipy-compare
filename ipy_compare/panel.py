@@ -21,6 +21,23 @@ class Compare:
         # Detect if we're in dark mode
         self.is_dark = self._detect_dark_mode()
         
+        # Set global background color
+        bg_color = '#2d2d2d' if self.is_dark else 'white'
+        self.main_layout = pn.Column(
+            sizing_mode='stretch_width',
+            margin=0,
+            css_classes=['panel-widget-box']
+        )
+        
+        # Add CSS for consistent styling
+        pn.config.raw_css.append(f"""
+        .panel-widget-box {{
+            padding: 10px;
+            background-color: {bg_color};
+        }}
+        """)
+        
+        # Rest of initialization
         self.df = df
         self.columns = columns
         self.measures = measures or {}
@@ -35,8 +52,6 @@ class Compare:
         self.pagination_iter = iter(self.pagination)
         self.current_index = self.pagination[0] if self.pagination else None
 
-        # Create main layout
-        self.main_layout = pn.Column(sizing_mode='stretch_width')
         self._create_layout()
         
     def _detect_dark_mode(self):
@@ -62,8 +77,19 @@ class Compare:
         
     def _create_layout(self):
         """Create the initial panel layout"""
-        # Content area
-        self.content_area = pn.Column(sizing_mode='stretch_width')
+        # Content area with matching background
+        bg_color = '#D3D3D3' if self.is_dark else 'white'
+        self.content_area = pn.Column(
+            sizing_mode='stretch_width',
+            css_classes=['content-area']
+        )
+        
+        # Add CSS for content area
+        pn.config.raw_css.append(f"""
+        .content-area {{
+            background-color: {bg_color};
+        }}
+        """)
         
         # Navigation buttons
         self.prev_button = pn.widgets.Button(name='Previous', button_type='primary')
