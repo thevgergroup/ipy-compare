@@ -1,5 +1,7 @@
 import pandas as pd
 import panel as pn
+from IPython import get_ipython
+from IPython.display import Javascript, display
 from .brand import footer_html
 
 class Compare:
@@ -13,7 +15,11 @@ class Compare:
             measures (dict): Dictionary of measures (e.g., overall, each).
             pagination (iterable or None): Custom pagination logic.
         """
-        pn.extension()
+        # Set up panel with dark theme support
+        pn.extension(design='material')
+        
+        # Detect if we're in dark mode
+        self.is_dark = self._detect_dark_mode()
         
         self.df = df
         self.columns = columns
@@ -32,6 +38,27 @@ class Compare:
         # Create main layout
         self.main_layout = pn.Column(sizing_mode='stretch_width')
         self._create_layout()
+        
+    def _detect_dark_mode(self):
+        """Detect if we're in Colab dark mode using JavaScript"""
+        try:
+            ipython = get_ipython()
+            if ipython is None:
+                return False
+
+            js_code = """
+            (() => {
+                const theme = document.documentElement.getAttribute('theme');
+                return theme === 'dark';
+            })()
+            """
+            result = Javascript(js_code)
+            display(result)
+            output = ipython.ev('result.data')
+            return output
+        except Exception:
+            # If anything fails, default to light mode
+            return False
         
     def _create_layout(self):
         """Create the initial panel layout"""
@@ -85,14 +112,39 @@ class Compare:
         """Generate the layout for a single row"""
         columns = []
         
+        # Define styles based on theme
+        if self.is_dark:
+            text_color = 'white'
+            border_color = '#555'
+            bg_color = '#2d2d2d'
+        else:
+            text_color = 'black'
+            border_color = '#ccc'
+            bg_color = 'white'
+        
         for col in self.columns:
+            # Create column header with appropriate styling
+            header = pn.pane.HTML(
+                f"<div style='color: {text_color};'><strong>{col}</strong></div>"
+            )
+            
+            # Create content with appropriate styling
+            content = pn.pane.HTML(
+                f"""<div style='
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                    max-height: 200px;
+                    overflow: auto;
+                    padding: 10px;
+                    border: 1px solid {border_color};
+                    background-color: {bg_color};
+                    color: {text_color};
+                '>{row[col]}</div>"""
+            )
+            
             col_layout = pn.Column(
-                pn.pane.Markdown(f"**{col}**"),
-                pn.pane.HTML(
-                    f"<div style='white-space: pre-wrap; word-wrap: break-word; "
-                    f"max-height: 200px; overflow: auto; padding: 10px; "
-                    f"border: 1px solid #ccc;'>{row[col]}</div>"
-                ),
+                header,
+                content,
                 sizing_mode='stretch_width'
             )
             
@@ -124,6 +176,8 @@ class Compare:
         
     def _add_overall_measure_buttons(self):
         """Add overall measure radio buttons"""
+        text_color = 'white' if self.is_dark else 'black'
+        
         options = [None] + self.measures["overall"]
         if "overall" not in self.radio_buttons:
             self.radio_buttons["overall"] = pn.widgets.RadioButtonGroup(
@@ -136,8 +190,12 @@ class Compare:
         if saved:
             self.radio_buttons["overall"].value = saved
             
+        header = pn.pane.HTML(
+            f"<h3 style='color: {text_color};'>Overall Measures</h3>"
+        )
+        
         self.content_area.append(pn.Column(
-            pn.pane.Markdown("### Overall Measures"),
+            header,
             self.radio_buttons["overall"]
         ))
 
